@@ -17,6 +17,8 @@
 
 
 WITH_CURL        := yes
+WITH_HTTP_SERVER := yes
+WITH_CTRLSOCK    := yes
 
 BUILDDIR = ${CURDIR}/build
 
@@ -27,6 +29,12 @@ SRCS =  src/main.c \
 	src/hap_input.c \
 	src/timestore.c \
 	src/influxdb.c \
+	src/zway.c \
+	src/cron.c \
+	src/channel.c \
+	src/sun.c \
+
+LDFLAGS += -lm
 
 
 install: ${PROG}

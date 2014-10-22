@@ -11,9 +11,12 @@
 #include "libsvc/libsvc.h"
 #include "libsvc/trace.h"
 #include "libsvc/cfg.h"
+#include "libsvc/http.h"
+#include "libsvc/ctrlsock.h"
 
 #include "hap_input.h"
-
+#include "zway.h"
+#include "cron.h"
 
 static int running = 1;
 static int reload = 0;
@@ -55,6 +58,28 @@ doreload(int x)
 static void
 refresh_subsystems(void)
 {
+  cron_refresh();
+}
+
+
+
+/**
+ *
+ */
+static void
+http_init(void)
+{
+  cfg_root(cr);
+
+  int port = cfg_get_int(cr, CFG("http", "port"), 9900);
+  const char *bindaddr = cfg_get_str(cr, CFG("http", "bindAddress"),
+                                     "127.0.0.1");
+  if(http_server_init(port, bindaddr))
+    exit(1);
+
+  http_serve_static("/public/static", "www/static");
+
+  zway_gw_init();
 
 }
 
@@ -95,7 +120,13 @@ main(int argc, char **argv)
 
   libsvc_init();
 
+  ctrlsock_init("/tmp/hapctrl");
+
+  http_init();
+
   hap_input_init();
+
+  cron_init();
 
   running = 1;
   sigemptyset(&set);
