@@ -69,12 +69,7 @@ refresh_subsystems(void)
 static void
 http_init(void)
 {
-  cfg_root(cr);
-
-  int port = cfg_get_int(cr, CFG("http", "port"), 9900);
-  const char *bindaddr = cfg_get_str(cr, CFG("http", "bindAddress"),
-                                     "127.0.0.1");
-  if(http_server_init(port, bindaddr))
+  if(http_server_init(NULL))
     exit(1);
 
   http_serve_static("/public/static", "www/static");
