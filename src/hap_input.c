@@ -1,3 +1,4 @@
+#include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -59,6 +60,8 @@ typedef struct channel {
 
   int last_valid;
 
+  time_t not_before;
+
 } channel_t;
 
 LIST_HEAD(channel_list, channel);
@@ -94,7 +97,7 @@ find_channel(uint16_t id)
  */
 static void
 handle_input(cfg_t *channels_conf, uint16_t channel,
-	     int32_t value, uint32_t time)
+	     int32_t value, uint32_t tim)
 {
   channel_t *c = find_channel(channel);
 
@@ -110,6 +113,16 @@ handle_input(cfg_t *channels_conf, uint16_t channel,
 
   if(channel_conf == NULL)
     return;
+
+
+  uint32_t min_interval;
+  if(!htsmsg_get_u32(channel_conf, "mininterval", &min_interval)) {
+    time_t now = time(NULL);
+    if(c->not_before > now)
+      return;
+
+    c->not_before = now + min_interval;
+  }
 
   int timestoreNodeId = htsmsg_get_u32_or_default(channel_conf,
 						  "timestoreNodeId",
@@ -140,10 +153,10 @@ handle_input(cfg_t *channels_conf, uint16_t channel,
   } else if(!strcmp(unit, "1000/kWh")) {
 
     uint32_t dv = value - c->last_value;
-    uint32_t dt = time  - c->last_time;
+    uint32_t dt = tim   - c->last_time;
 
     c->last_value = value;
-    c->last_time  = time;
+    c->last_time  = tim;
 
     if(dt < 3600000 && c->last_valid) {
       int value = 3600000 * dv / dt;

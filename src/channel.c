@@ -64,7 +64,7 @@ channel_by_name(cfg_t *root, const char *name)
 static void
 channel_set_binary_internal(cfg_t *ch, int on, const char *source)
 {
-  trace(LOG_INFO, "Setting channel %s to %s on behalf of %s\n",
+  trace(LOG_INFO, "Setting channel %s to %s on behalf of %s",
         htsmsg_get_str(ch, "name"), on ? "on" : "off", source);
 
   zway_set_channel(ch, on);

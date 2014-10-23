@@ -135,6 +135,15 @@ cron_entry_active(cfg_t *c, const timeinfo_t *ti)
 {
   const char *str;
 
+  if((str = htsmsg_get_str(c, "sun")) != NULL) {
+    if(!strcmp(str, "up") && !ti->sun_is_up)
+      return 0;
+
+    if(!strcmp(str, "down") && ti->sun_is_up)
+      return 0;
+  }
+
+
   if((str = htsmsg_get_str(c, "at")) != NULL) {
     if(!strcmp(str, "sunrise"))
       return check_sunrise(ti);

@@ -6,6 +6,7 @@
 #include "libsvc/talloc.h"
 #include "libsvc/misc.h"
 #include "libsvc/curlhelpers.h"
+#include "libsvc/trace.h"
 
 #include "zway.h"
 
@@ -26,6 +27,10 @@ zway_set_channel(cfg_t *ch, int value)
   if(device == -1 || instance == -1)
     return -1;
 
+  trace(LOG_DEBUG, "zway: Setting %s to %d",
+        htsmsg_get_str(ch, "name") ?: "<noname>",
+        value);
+
   char *cmd = tsprintf("/ZWaveAPI/Run/devices[%d].instances[%d].commandClasses[0x25].Set(%d)",
                        device, instance, value);
 
@@ -37,19 +42,12 @@ zway_set_channel(cfg_t *ch, int value)
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, libsvc_curl_waste_output);
   curl_easy_setopt(curl, CURLOPT_USERAGENT, "hapd");
-  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+  curl_easy_setopt(curl, CURLOPT_VERBOSE, 0L);
 
   curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   return 0;
 }
-
-
-
-/**
- *
- */
-
 
 
 /**
@@ -58,8 +56,4 @@ zway_set_channel(cfg_t *ch, int value)
 void
 zway_gw_init(void)
 {
-  //  http_route_add("/zway/notify$", zway_notify, 0);
-
-  //  zway_set_channel(1000, 1);
-
 }
