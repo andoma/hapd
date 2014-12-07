@@ -16,6 +16,8 @@
 int
 zway_set_channel(cfg_t *ch, int value)
 {
+  value = !!value;
+
   const char *host = cfg_get_str(ch, CFG("zwayhost"), NULL);
 
   if(host == NULL)

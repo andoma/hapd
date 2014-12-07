@@ -69,6 +69,8 @@ refresh_subsystems(void)
 static void
 http_init(void)
 {
+  return;
+
   if(http_server_init(NULL))
     exit(1);
 

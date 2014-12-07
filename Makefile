@@ -27,6 +27,7 @@ PROG=${BUILDDIR}/hapd
 
 SRCS =  src/main.c \
 	src/hap_input.c \
+	src/hap_output.c \
 	src/timestore.c \
 	src/influxdb.c \
 	src/zway.c \

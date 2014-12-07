@@ -1,3 +1,4 @@
+#include <sys/param.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -8,6 +9,7 @@
 
 #include "channel.h"
 #include "zway.h"
+#include "hap_output.h"
 
 /**
  *
@@ -68,6 +70,7 @@ channel_set_binary_internal(cfg_t *ch, int on, const char *source)
         htsmsg_get_str(ch, "name"), on ? "on" : "off", source);
 
   zway_set_channel(ch, on);
+  hap_set_channel(ch, on);
 }
 
 /**
@@ -88,6 +91,39 @@ channel_set_binary(const char *chname, int on, const char *source)
 }
 
 
+/**
+ *
+ */
+static void
+channel_set_dim_internal(cfg_t *ch, int level, const char *source)
+{
+  level = MAX(MIN(level, 100), 0);
+
+  trace(LOG_INFO, "Setting channel %s to %d%% on behalf of %s",
+        htsmsg_get_str(ch, "name"), level, source);
+
+  hap_set_channel(ch, -level);
+}
+
+/**
+ *
+ */
+void
+channel_set_dim(const char *chname, int level, const char *source)
+{
+  cfg_root(root);
+  cfg_t *ch = channel_by_name(root, chname);
+  if(ch == NULL) {
+    trace(LOG_ERR,
+          "Unable to set channel %s to %d%% -- Channel not known",
+          chname, level);
+    return;
+  }
+
+  channel_set_dim_internal(ch, level, source);
+}
+
+
 
 static int
 channel_cli_set(const char *user,
@@ -96,7 +132,6 @@ channel_cli_set(const char *user,
                 void *opaque)
 {
   cfg_root(root);
-  int on = !strcmp(argv[1], "on");
 
   const char *chname = argv[0];
   cfg_t *ch = channel_by_name(root, chname);
@@ -105,14 +140,24 @@ channel_cli_set(const char *user,
     return 1;
   }
 
-  msg(opaque, "Setting chanel %s to %s", chname,
-      on ? "on" : "off");
+  int level = atoi(argv[1]);
+  if(level) {
+    msg(opaque, "Setting chanel %s to %d%%", chname, level);
 
-  channel_set_binary_internal(ch, on, user);
+    channel_set_dim_internal(ch, level, user);
+
+  } else {
+    int on = !strcmp(argv[1], "on");
+    msg(opaque, "Setting chanel %s to %s", chname,
+        on ? "on" : "off");
+
+    channel_set_binary_internal(ch, on, user);
+  }
+
   return 0;
 }
 
 CMD(channel_cli_set,
     CMD_LITERAL("set"),
     CMD_VARSTR("channel"),
-    CMD_VARSTR("on | off"));
+    CMD_VARSTR("on | off | percentage"));
