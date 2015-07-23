@@ -183,17 +183,19 @@ cron_entry_assert(cfg_t *c)
     return;
 
   HTSMSG_FOREACH(f, actions) {
-
     const char *chname = f->hmf_name;
     if(chname == NULL)
       continue;
 
     switch(f->hmf_type) {
     case HMF_STR:
-      if(!strcmp(f->hmf_str, "on"))
+      if(!strcmp(f->hmf_str, "on")) {
         channel_set_binary(chname, 1, "cron");
-      else if(!strcmp(f->hmf_str, "off"))
+      } else if(!strcmp(f->hmf_str, "off")) {
         channel_set_binary(chname, 0, "cron");
+      } else if(strchr(f->hmf_str, '%')) {
+        channel_set_dim(chname, atoi(f->hmf_str), "cron");
+      }
       break;
     }
   }
